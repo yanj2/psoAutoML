@@ -58,7 +58,6 @@ from deap import tools
 from scoop import futures
 
 from evaluation_functions import * 
-from deep import keras_capos_input_pei
 
 GMAX = 5               # Max number of generations
 DELTA = 1e-7           # Smallest position increment allowed
@@ -153,7 +152,7 @@ toolbox = base.Toolbox()
 #      pooling_size,
 #      dropout_rate,
 #      num_dense_out
-toolbox.register("evaluate", keras_capos_input_pei)
+toolbox.register("evaluate", neuralnet)
 toolbox.register("particle", generate, bound_l=-5, bound_u=5)
 toolbox.register("population", tools.initRepeat, list, toolbox.particle)
 toolbox.register("update", updateParticle, phi_p=0.8, phi_g=0.8, w=0.8)

@@ -1,4 +1,10 @@
 import numpy as np 
+from deep import keras_capos_input_pei
+
+def neuralnet(individual):
+    # need to figure out a sensible way to put in the hyperparameter values 
+    validation_accuracy = keras_capos_input_pei()
+    return validation_accuracy,
 
 def sphere(individual):
     try:

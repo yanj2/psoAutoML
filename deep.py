@@ -144,7 +144,7 @@ def train_model(nb_classes,
     except KeyError:
         validation_accuracy = 0.
     print("{0}, {1}".format(learning_time, validation_accuracy))
-    return
+    return validation_accuracy
 
 def build_model(nb_classes,
                 img_rows,
@@ -332,7 +332,7 @@ def keras_capos_input_pei(num_classes = NUM_CLASSES,
     print("*********************************************")
     print(" ")
 
-    train_model(num_classes,
+    return train_model(num_classes,
                 num_rows,
                 num_cols,
                 num_channels,
