@@ -20,12 +20,12 @@ from keras.utils import np_utils
 
 import theano
 
-import dne.somMaps
-from dne.logger import LOGGER, set_up_logger
+# import dne.somMaps
+# from dne.logger import LOGGER, set_up_logger
 
 import numpy as np
 
-LOGGER = logging.getLogger(__name__)
+# LOGGER = logging.getLogger(__name__)
 
 NUM_CLASSES = 2
 NUM_ROWS = 256
@@ -49,7 +49,8 @@ def train_model(nb_classes,
                 pooling_size,
                 dropout_rate,
                 num_dense_outputs):
-    LOGGER.info("Assembling model components.")
+    # LOGGER.info("Assembling model components.")
+    print("Assembling model components.")
     model = build_model(nb_classes,
                         img_rows,
                         img_cols,
@@ -62,7 +63,8 @@ def train_model(nb_classes,
 
     # let's train the model using SGD + momentum (how original).
     sgd = SGD(lr=0.01, decay=1.e-6, momentum=0.9, nesterov=True)
-    LOGGER.info("Compiling model.")
+    # LOGGER.info("Compiling model.")
+    print("Compiling model.")
     model.compile(loss='categorical_crossentropy',
                   optimizer=sgd,
                   metrics=['accuracy'])
@@ -78,7 +80,8 @@ def train_model(nb_classes,
     # X_train /= 255
     # X_test /= 255
 
-    LOGGER.info("Loading data from npz")
+    # LOGGER.info("Loading data from npz")
+    print("Loadgin data from npz")
     data = np.load("training_data.npz")
     x_train = data['x_train']
     y_train = data['y_train']
@@ -92,10 +95,12 @@ def train_model(nb_classes,
     batch_size = 32
     data_augmentation = False
 
-    LOGGER.info("Training model.")
+    # LOGGER.info("Training model.")
+    print("Training model.")
     start = time.time()
     if not data_augmentation:
-        LOGGER.info('Not using data augmentation.')
+        # LOGGER.info('Not using data augmentation.')
+        print("Not using data augmentation")
         hist = model.fit(x_train,
                          y_train,
                          batch_size=batch_size,
@@ -103,7 +108,8 @@ def train_model(nb_classes,
                          validation_data=(x_test, y_test),
                          shuffle=True)
     else:
-        LOGGER.info('Using real-time data augmentation.')
+        # LOGGER.info('Using real-time data augmentation.')
+        print("Using real-time data augmentation")
 
         # this will do preprocessing and realtime data augmentation
         datagen = ImageDataGenerator(featurewise_center=False,
@@ -129,7 +135,8 @@ def train_model(nb_classes,
 
     end = time.time()
 
-    LOGGER.debug("%s", repr(hist.history))
+    # LOGGER.debug("%s", repr(hist.history))
+    print("%s".format(repr(hist.history)))
 
     learning_time = end-start
     try:
@@ -223,32 +230,57 @@ def keras_capos_input_cli():
                         help="Number of outputs from the dense (fully connected) layer.")
     args = parser.parse_args()
 
-    set_up_logger()
+    # set_up_logger()
 
-    LOGGER.info(" ")
-    LOGGER.info("*********************************************")
-    LOGGER.info("* KERAS CAPOS INPUT                         *")
-    LOGGER.info("*********************************************")
-    LOGGER.info(" ")
-    LOGGER.info("Input parameters are:")
-    LOGGER.info("Number of classes - %i", args.num_classes)
-    LOGGER.info("Number of rows - %i", args.num_rows)
-    LOGGER.info("Number of columns - %i", args.num_cols)
-    LOGGER.info("Number of channels - %i", args.num_channels)
-    LOGGER.info(" ")
-    LOGGER.info("---------------------------------------------")
-    LOGGER.info(" ")
-    LOGGER.info("Trainable parameters")
-    LOGGER.info(" ")
-    LOGGER.info("Number of epochs - %i", args.num_epochs)
-    LOGGER.info("Number of filters output from convolution layers- %i", args.num_conv_filters)
-    LOGGER.info("Size of convolutional kernel - (%i, %i)", args.kernel_size, args.kernel_size)
-    LOGGER.info("Size of pooling kernel - (%i, %i)", args.pooling_size, args.pooling_size)
-    LOGGER.info("Dropout rate - %f", args.dropout_rate)
-    LOGGER.info("Number of dense layer outputs - %i", args.num_dense_outputs)
-    LOGGER.info(" ")
-    LOGGER.info("*********************************************")
-    LOGGER.info(" ")
+    # LOGGER.info(" ")
+    # LOGGER.info("*********************************************")
+    # LOGGER.info("* KERAS CAPOS INPUT                         *")
+    # LOGGER.info("*********************************************")
+    # LOGGER.info(" ")
+    # LOGGER.info("Input parameters are:")
+    # LOGGER.info("Number of classes - %i", args.num_classes)
+    # LOGGER.info("Number of rows - %i", args.num_rows)
+    # LOGGER.info("Number of columns - %i", args.num_cols)
+    # LOGGER.info("Number of channels - %i", args.num_channels)
+    # LOGGER.info(" ")
+    # LOGGER.info("---------------------------------------------")
+    # LOGGER.info(" ")
+    # LOGGER.info("Trainable parameters")
+    # LOGGER.info(" ")
+    # LOGGER.info("Number of epochs - %i", args.num_epochs)
+    # LOGGER.info("Number of filters output from convolution layers- %i", args.num_conv_filters)
+    # LOGGER.info("Size of convolutional kernel - (%i, %i)", args.kernel_size, args.kernel_size)
+    # LOGGER.info("Size of pooling kernel - (%i, %i)", args.pooling_size, args.pooling_size)
+    # LOGGER.info("Dropout rate - %f", args.dropout_rate)
+    # LOGGER.info("Number of dense layer outputs - %i", args.num_dense_outputs)
+    # LOGGER.info(" ")
+    # LOGGER.info("*********************************************")
+    # LOGGER.info(" ")
+
+    print(" ")
+    print("*********************************************")
+    print("* KERAS CAPOS INPUT                         *")
+    print("*********************************************")
+    print(" ")
+    print("Input parameters are:")
+    print("Number of classes - {:d}".format(args.num_classes))
+    print("Number of rows - {:d}".format(args.num_rows))
+    print("Number of columns - {:d}".format(args.num_cols))
+    print("Number of channels - {:d}".format(args.num_channels))
+    print(" ")
+    print("---------------------------------------------")
+    print(" ")
+    print("Trainable parameters")
+    print(" ")
+    print("Number of epochs - {:d}".format(args.num_epochs))
+    print("Number of filters output from convolution layers- {:d}".format(args.num_conv_filters))
+    print("Size of convolutional kernel - ({:d}, {:d})".format(args.kernel_size, args.kernel_size))
+    print("Size of pooling kernel - ({:d}, {:d})".format(args.pooling_size, args.pooling_size))
+    print("Dropout rate - {:f}".format(args.dropout_rate))
+    print("Number of dense layer outputs - {:d}".format(args.num_dense_outputs))
+    print(" ")
+    print("*********************************************")
+    print(" ")
 
     train_model(args.num_classes,
                 args.num_rows,
@@ -260,6 +292,59 @@ def keras_capos_input_cli():
                 args.pooling_size,
                 args.dropout_rate,
                 args.num_dense_outputs)
+
+def keras_capos_input_pei(num_classes = NUM_CLASSES, 
+                          num_rows = NUM_ROWS, 
+                          num_cols = NUM_COLS, 
+                          num_channels = NUM_CHANNELS, 
+                          num_epochs = NUM_EPOCHS, 
+                          num_conv_filters = NUM_CONV_FILTERS,
+                          kernel_size = KERNEL_SIZE,
+                          pooling_size = POOLING_SIZE,
+                          dropout_rate = DROPOUT_RATE,
+                          num_dense_out = NUM_DENSE_OUT):
+    """ PSO evaluation interface. This function takes in hyperparameter values 
+    as arguments and initialises the image processing pipeline. 
+    """
+
+    print(" ")
+    print("*********************************************")
+    print("* KERAS CAPOS INPUT                         *")
+    print("*********************************************")
+    print(" ")
+    print("Input parameters are:")
+    print("Number of classes - {:d}".format(num_classes))
+    print("Number of rows - {:d}".format(num_rows))
+    print("Number of columns - {:d}".format(num_cols))
+    print("Number of channels - {:d}".format(num_channels))
+    print(" ")
+    print("---------------------------------------------")
+    print(" ")
+    print("Trainable parameters")
+    print(" ")
+    print("Number of epochs - {:d}".format(num_epochs))
+    print("Number of filters output from convolution layers- {:d}".format(num_conv_filters))
+    print("Size of convolutional kernel - ({:d}, {:d})".format(kernel_size, kernel_size))
+    print("Size of pooling kernel - ({:d}, {:d})".format(pooling_size, pooling_size))
+    print("Dropout rate - {:f}".format(dropout_rate))
+    print("Number of dense layer outputs - {:d}".format(num_dense_outputs))
+    print(" ")
+    print("*********************************************")
+    print(" ")
+
+    train_model(num_classes,
+                num_rows,
+                num_cols,
+                num_channels,
+                num_epochs,
+                num_conv_filters,
+                kernel_size,
+                pooling_size,
+                dropout_rate,
+                num_dense_out)
+    
+
+
 
 if __name__ == '__main__':
     keras_capos_input_cli()
