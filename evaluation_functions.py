@@ -1,9 +1,19 @@
 import numpy as np 
-from deep import keras_capos_input_pei
+from deep import train_model
 
 def neuralnet(individual):
     # need to figure out a sensible way to put in the hyperparameter values 
-    validation_accuracy = keras_capos_input_pei()
+    # maximise
+    # Hardcoding method: kernel_size, pooling_size, dropout_rate are currently default 
+    # Expecting that the first individual is ref num_conv_filters and 2nd ind is 
+    # num_dense_outputs 
+    num_conv_filters = int(individual[0])
+    num_dense_outputs = int(individual[1])
+    validation_accuracy = train_model(num_conv_outputs = num_conv_filters, 
+                                      num_dense_outputs = num_dense_outputs,
+                                      kernel_size = 3, 
+                                      pooling_size = 2, 
+                                      dropout_rate = 0.5) 
     return validation_accuracy,
 
 def sphere(individual):

@@ -74,7 +74,19 @@ creator.create("Particle", np.ndarray, fitness=creator.Fitness, velocity=np.ndar
 
 # generates and returns a particle based on the dim (size) of the problem
 def generate(bound_l, bound_u):
-    particle = creator.Particle(np.random.uniform(bound_l,bound_u) for _ in range(DIM))
+
+    # Hardcoded bounds: for now assume that the first ind is num_conv_filt and 2nd is num_dense_out 
+    num_conv_filters = np.random.randint(1,512)
+    num_dense_out = np.random.randint(1,512)
+    # kernel_size = np.randint.uniform(0,4)
+    # pooling_size = np.randint.uniform(0,4)
+    # dropout_rate = np.random.uniform(0,1)
+
+    print(num_conv_filters)
+    print(num_dense_out)
+    particle = creator.Particle([num_conv_filters, num_dense_out])
+    # Original bounds 
+    # particle = creator.Particle(np.random.uniform(bound_l,bound_u) for _ in range(DIM))
     bound = bound_u - bound_l
     particle.velocity = np.array([np.random.uniform(-abs(bound), abs(bound)) for _ in range(DIM)])
     particle.best_known = creator.Particle(particle)
@@ -82,6 +94,8 @@ def generate(bound_l, bound_u):
 
 # updating the velocity and position of the particle
 def updateParticle(particle, best, generator, w, phi_p, phi_g):
+
+    # NOTE: when updating the particle, we need to consider how to ensure the particle values are integers....
 
     r_p = np.array([generator.uniform(0,1) for _ in particle])
     r_g = np.array([generator.uniform(0,1) for _ in particle])
@@ -127,7 +141,7 @@ def updateSwarm(particle, best, generator):
             best = creator.Particle(particle.best_known)
             best.fitness.values = particle.best_known.fitness.values
 
-    time.sleep(5)    # simulating long computation time
+    # tim.sleep(5)    # simulating long computation time
     return best
 
 def createBest(best):
@@ -142,17 +156,18 @@ toolbox = base.Toolbox()
 
 # deep evaluations function has default arguments defined in the deep.py file 
 # The arguments that can be changed are: 
-#      num_classes,
-#      num_rows,
-#      num_cols,
-#      num_channels,
-#      num_epochs,
+#      num_classes: fixed,
+#      num_rows: fixed,
+#      num_cols: fixed,
+#      num_channels: fixed,
+#      num_epochs: fixed,
 #      num_conv_filters,
 #      kernel_size,
 #      pooling_size,
 #      dropout_rate,
 #      num_dense_out
 toolbox.register("evaluate", neuralnet)
+# toolbox.register("evaluate", neuralnet, num_classes=10, num_rows=8, num_cols=8, num_channels=1, num_epochs=2)
 toolbox.register("particle", generate, bound_l=-5, bound_u=5)
 toolbox.register("population", tools.initRepeat, list, toolbox.particle)
 toolbox.register("update", updateParticle, phi_p=0.8, phi_g=0.8, w=0.8)

@@ -11,6 +11,8 @@ import datetime
 import argparse
 import time
 
+import tensorflow as tf 
+
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
@@ -18,7 +20,8 @@ from keras.layers import Convolution2D, MaxPooling2D
 from keras.optimizers import SGD
 from keras.utils import np_utils
 
-import theano
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
 
 # import dne.somMaps
 # from dne.logger import LOGGER, set_up_logger
@@ -27,10 +30,10 @@ import numpy as np
 
 # LOGGER = logging.getLogger(__name__)
 
-NUM_CLASSES = 2
-NUM_ROWS = 256
-NUM_COLS = 256
-NUM_CHANNELS = 3
+NUM_CLASSES = 10 
+NUM_ROWS = 8
+NUM_COLS = 8
+NUM_CHANNELS = 1
 
 NUM_EPOCHS = 2
 NUM_CONV_FILTERS = 32
@@ -39,27 +42,35 @@ POOLING_SIZE = 2
 DROPOUT_RATE = 0.5
 NUM_DENSE_OUT = 128
 
-def train_model(nb_classes,
-                img_rows,
-                img_cols,
-                img_channels,
-                num_epochs,
-                num_conv_outputs,
-                kernel_size,
-                pooling_size,
-                dropout_rate,
-                num_dense_outputs):
+def train_model(nb_classes = NUM_CLASSES,
+                img_rows = NUM_ROWS,
+                img_cols = NUM_COLS,
+                img_channels = NUM_CHANNELS,
+                num_epochs = NUM_EPOCHS,
+                num_conv_outputs = NUM_CONV_FILTERS,
+                kernel_size = KERNEL_SIZE,
+                pooling_size = POOLING_SIZE,
+                dropout_rate = DROPOUT_RATE,
+                num_dense_outputs = NUM_DENSE_OUT):
     # LOGGER.info("Assembling model components.")
     print("Assembling model components.")
-    model = build_model(nb_classes,
-                        img_rows,
-                        img_cols,
-                        img_channels,
-                        num_conv_outputs,
-                        kernel_size,
-                        pooling_size,
-                        dropout_rate,
-                        num_dense_outputs)
+
+    # file locking --> 
+
+    with tf.device('/CPU:0'):
+
+        model = build_model(nb_classes,
+                            img_rows,
+                            img_cols,
+                            img_channels,
+                            num_conv_outputs,
+                            kernel_size,
+                            pooling_size,
+                            dropout_rate,
+                            num_dense_outputs)
+
+    sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+
 
     # let's train the model using SGD + momentum (how original).
     sgd = SGD(lr=0.01, decay=1.e-6, momentum=0.9, nesterov=True)
@@ -81,12 +92,21 @@ def train_model(nb_classes,
     # X_test /= 255
 
     # LOGGER.info("Loading data from npz")
-    print("Loadgin data from npz")
-    data = np.load("training_data.npz")
-    x_train = data['x_train']
-    y_train = data['y_train']
-    x_test = data['x_test']
-    y_test = data['y_test']
+    # print("Loadgin data from npz")
+    # data = np.load("training_data.npz")
+    data = datasets.load_digits()
+    x = data.data
+    y = data.target 
+    x_train, x_test, y_train, y_test = train_test_split(x,y, test_size = 0.2)
+
+    # x_train = data['x_train']
+    # y_train = data['y_train']
+    # x_test = data['x_test']
+    # y_test = data['y_test']
+
+    # reshape the x_train, x_test from 1 dim to 2 
+    x_train = np.reshape(x_train, (-1, NUM_ROWS, NUM_COLS, NUM_CHANNELS))
+    x_test = np.reshape(x_test, (-1, NUM_ROWS, NUM_COLS, NUM_CHANNELS))
 
     # convert class vectors to binary class matrices
     y_train = np_utils.to_categorical(y_train, nb_classes)
@@ -99,6 +119,7 @@ def train_model(nb_classes,
     print("Training model.")
     start = time.time()
     if not data_augmentation:
+
         # LOGGER.info('Not using data augmentation.')
         print("Not using data augmentation")
         hist = model.fit(x_train,
@@ -144,31 +165,33 @@ def train_model(nb_classes,
     except KeyError:
         validation_accuracy = 0.
     print("{0}, {1}".format(learning_time, validation_accuracy))
+    # printing these values out to the stdout and reading in all these values back.... 
+
     return validation_accuracy
 
 def build_model(nb_classes,
                 img_rows,
                 img_cols,
                 img_channels=3,
-                num_conv_filters=32,
-                kernel_size=3,
-                pooling_size=2,
-                dropout_rate=0.5,
-                num_dense_outputs=128):
+                num_conv_filters=32,     # 512 or 1024
+                kernel_size=3,           # max image size: kernel x kernel < width x height 
+                pooling_size=2,          # max image size: kernel x kernel < width x height no  
+                dropout_rate=0.5,        # % value
+                num_dense_outputs=128):  # 512 or 1024 n
     model = Sequential()
 
     model.add(Convolution2D(num_conv_filters,
                             kernel_size,
                             kernel_size,
                             border_mode='same',
-                            input_shape=(img_channels, img_rows, img_cols),
+                            input_shape=(img_rows, img_cols, img_channels),
                             subsample=(2,2)))
     model.add(Activation('relu'))
-    model.add(Convolution2D(num_conv_filters,
-                            kernel_size,
-                            kernel_size,
-                            subsample=(2,2)))
-    model.add(Activation('relu'))
+    # model.add(Convolution2D(num_conv_filters,
+                            # kernel_size,
+                            # kernel_size,
+                            # subsample=(2,2)))
+    # model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(pooling_size, pooling_size)))
     model.add(Dropout(dropout_rate))
 
@@ -293,55 +316,55 @@ def keras_capos_input_cli():
                 args.dropout_rate,
                 args.num_dense_outputs)
 
-def keras_capos_input_pei(num_classes = NUM_CLASSES, 
-                          num_rows = NUM_ROWS, 
-                          num_cols = NUM_COLS, 
-                          num_channels = NUM_CHANNELS, 
-                          num_epochs = NUM_EPOCHS, 
-                          num_conv_filters = NUM_CONV_FILTERS,
-                          kernel_size = KERNEL_SIZE,
-                          pooling_size = POOLING_SIZE,
-                          dropout_rate = DROPOUT_RATE,
-                          num_dense_out = NUM_DENSE_OUT):
-    """ PSO evaluation interface. This function takes in hyperparameter values 
-    as arguments and initialises the image processing pipeline. 
-    """
+# def keras_capos_input_pei(num_classes = NUM_CLASSES, 
+#                           num_rows = NUM_ROWS, 
+#                           num_cols = NUM_COLS, 
+#                           num_channels = NUM_CHANNELS, 
+#                           num_epochs = NUM_EPOCHS, 
+#                           num_conv_filters = NUM_CONV_FILTERS,
+#                           kernel_size = KERNEL_SIZE,
+#                           pooling_size = POOLING_SIZE,
+#                           dropout_rate = DROPOUT_RATE,
+#                           num_dense_out = NUM_DENSE_OUT):
+#     """ PSO evaluation interface. This function takes in hyperparameter values 
+#     as arguments and initialises the image processing pipeline. 
+#     """
 
-    print(" ")
-    print("*********************************************")
-    print("* KERAS CAPOS INPUT                         *")
-    print("*********************************************")
-    print(" ")
-    print("Input parameters are:")
-    print("Number of classes - {:d}".format(num_classes))
-    print("Number of rows - {:d}".format(num_rows))
-    print("Number of columns - {:d}".format(num_cols))
-    print("Number of channels - {:d}".format(num_channels))
-    print(" ")
-    print("---------------------------------------------")
-    print(" ")
-    print("Trainable parameters")
-    print(" ")
-    print("Number of epochs - {:d}".format(num_epochs))
-    print("Number of filters output from convolution layers- {:d}".format(num_conv_filters))
-    print("Size of convolutional kernel - ({:d}, {:d})".format(kernel_size, kernel_size))
-    print("Size of pooling kernel - ({:d}, {:d})".format(pooling_size, pooling_size))
-    print("Dropout rate - {:f}".format(dropout_rate))
-    print("Number of dense layer outputs - {:d}".format(num_dense_outputs))
-    print(" ")
-    print("*********************************************")
-    print(" ")
+#     print(" ")
+#     print("*********************************************")
+#     print("* KERAS CAPOS INPUT                         *")
+#     print("*********************************************")
+#     print(" ")
+#     print("Input parameters are:")
+#     print("Number of classes - {:d}".format(num_classes))
+#     print("Number of rows - {:d}".format(num_rows))
+#     print("Number of columns - {:d}".format(num_cols))
+#     print("Number of channels - {:d}".format(num_channels))
+#     print(" ")
+#     print("---------------------------------------------")
+#     print(" ")
+#     print("Trainable parameters")
+#     print(" ")
+#     print("Number of epochs - {:d}".format(num_epochs))
+#     print("Number of filters output from convolution layers- {:d}".format(num_conv_filters))
+#     print("Size of convolutional kernel - ({:d}, {:d})".format(kernel_size, kernel_size))
+#     print("Size of pooling kernel - ({:d}, {:d})".format(pooling_size, pooling_size))
+#     print("Dropout rate - {:f}".format(dropout_rate))
+#     print("Number of dense layer outputs - {:d}".format(num_dense_outputs))
+#     print(" ")
+#     print("*********************************************")
+#     print(" ")
 
-    return train_model(num_classes,
-                num_rows,
-                num_cols,
-                num_channels,
-                num_epochs,
-                num_conv_filters,
-                kernel_size,
-                pooling_size,
-                dropout_rate,
-                num_dense_out)
+#     return train_model(num_classes,
+#                 num_rows,
+#                 num_cols,
+#                 num_channels,
+#                 num_epochs,
+#                 num_conv_filters,
+#                 kernel_size,
+#                 pooling_size,
+#                 dropout_rate,
+#                 num_dense_out)
     
 
 
