@@ -9,11 +9,15 @@ def neuralnet(individual):
     # num_dense_outputs 
     num_conv_filters = int(individual[0])
     num_dense_outputs = int(individual[1])
+    kernel_size = int(individual[2])
+    pooling_size = int(individual[3])
+    dropout_rate = individual[4]
+
     validation_accuracy = train_model(num_conv_outputs = num_conv_filters, 
                                       num_dense_outputs = num_dense_outputs,
-                                      kernel_size = 3, 
-                                      pooling_size = 2, 
-                                      dropout_rate = 0.5) 
+                                      kernel_size = kernel_size, 
+                                      pooling_size = pooling_size, 
+                                      dropout_rate = dropout_rate) 
     return validation_accuracy,
 
 def sphere(individual):

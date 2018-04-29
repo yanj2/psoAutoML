@@ -59,18 +59,26 @@ from scoop import futures
 
 from evaluation_functions import * 
 
-GMAX = 5               # Max number of generations
+GMAX = 20               # Max number of generations
 DELTA = 1e-7           # Smallest position increment allowed
 EPSILON = 1e-7         # Smallest fitness value increment allowed
-DIM = 2                # No. of Dimensions in the problem
-POPULATION = 10        # Size of the particle Swarm
+DIM = 5                # No. of Dimensions in the problem
+POPULATION = 20        # Size of the particle Swarm
 
 # --------------------------Swarm operations ---------------------------------
 # Creates a fitness object that maximises its fitness value
-creator.create("Fitness", base.Fitness, weights=(1.0,))
+creator.create("Fitness", 
+               base.Fitness, 
+               weights=(1.0,))
 
 # Creates a particle with initial declaration of its contained attributes
-creator.create("Particle", np.ndarray, fitness=creator.Fitness, velocity=np.ndarray(DIM), best_known=None)
+creator.create("Particle", 
+               np.ndarray, 
+               fitness=creator.Fitness, 
+               velocity=np.ndarray(DIM), 
+               bd_min=np.ndarray(DIM),       # Boundary min of each dim
+               bd_max=np.ndarray(DIM),       # Boundary max of each dim
+               best_known=None)
 
 # generates and returns a particle based on the dim (size) of the problem
 def generate(bound_l, bound_u):
@@ -78,16 +86,16 @@ def generate(bound_l, bound_u):
     # Hardcoded bounds: for now assume that the first ind is num_conv_filt and 2nd is num_dense_out 
     num_conv_filters = np.random.randint(1,512)
     num_dense_out = np.random.randint(1,512)
-    # kernel_size = np.randint.uniform(0,4)
-    # pooling_size = np.randint.uniform(0,4)
-    # dropout_rate = np.random.uniform(0,1)
+    kernel_size = np.random.randint(1,4)
+    pooling_size = np.random.randint(1,4)
+    dropout_rate = np.random.uniform(0,1)
 
-    print(num_conv_filters)
-    print(num_dense_out)
-    particle = creator.Particle([num_conv_filters, num_dense_out])
-    # Original bounds 
+    particle = creator.Particle([num_conv_filters, num_dense_out, kernel_size, pooling_size, dropout_rate])
+    # Original particle creation
     # particle = creator.Particle(np.random.uniform(bound_l,bound_u) for _ in range(DIM))
     bound = bound_u - bound_l
+    particle.bd_min = np.array([1, 1, 1, 1, 0])
+    particle.bd_max = np.array([512, 512, 4, 4, 1])
     particle.velocity = np.array([np.random.uniform(-abs(bound), abs(bound)) for _ in range(DIM)])
     particle.best_known = creator.Particle(particle)
     return particle
@@ -95,7 +103,7 @@ def generate(bound_l, bound_u):
 # updating the velocity and position of the particle
 def updateParticle(particle, best, generator, w, phi_p, phi_g):
 
-    # NOTE: when updating the particle, we need to consider how to ensure the particle values are integers....
+    # NOTE: when updating the particle, we need to consider how to bound various inputs being optimised 
 
     r_p = np.array([generator.uniform(0,1) for _ in particle])
     r_g = np.array([generator.uniform(0,1) for _ in particle])
@@ -110,6 +118,12 @@ def updateParticle(particle, best, generator, w, phi_p, phi_g):
     v_w = w * particle.velocity
     particle.velocity[:] = np.add(v_w, np.add(v_p, v_g))
     particle[:] = np.add(particle, particle.velocity)
+
+    # Takes the bigger of either the new particle position or the minimum boundary value
+    particle[:] = np.maximum(particle.bd_min, particle)
+
+    # Takes the smaller of either the new particle position or the maximum boundary value 
+    particle[:] = np.minimum(particle.bd_max, particle)
 
 # initialise the swarm with fitness values.
 def initialiseSwarm(particle):
@@ -205,6 +219,7 @@ def main():
         # best list
         best = creator.Particle(global_best[0])
         best.fitness.values = global_best[0].fitness.values
+
         for n in range(1, POPULATION):
             if global_best[n].fitness.values > best.fitness.values:
                 best = creator.Particle(global_best[n])
@@ -217,7 +232,7 @@ def main():
         # iterate the generation
         g = g + 1
 
-    return pop, best
+    return pop, best, best.fitness.values
 
 if __name__ == "__main__":
     print(main())
